@@ -29,9 +29,9 @@ entrega pierde el 20 %; quien no aparezca aquí no cuenta como parte del grupo.
 
 | Nombre completo | Código | Correo institucional |
 |---|---|---|
-| | | |
-| | | |
-| | | |
+| Mónica Giraldo | 22507481 | monica_and.giraldo@uao.edu.co |
+| Edison Orozco | 22601596 | edison.orozco@uao.edu.co |
+| Armando Betancourt | 22507271 | armando.betancourt@uao.edu.co |
 
 ## Entrega
 
