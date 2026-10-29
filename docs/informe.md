@@ -4,6 +4,8 @@ Informe reproducible de la serie mensual de ventas netas de calzado.
 Las cifras corresponden a la ejecución local de `python miniproyecto.py`;
 las gráficas se generan en `figuras/` y las tablas en `resultados/`.
 
+**Reproducibilidad:** El proyecto se ejecuta con Python 3.12. Desde la raíz del repositorio se instalan las dependencias con `pip install -r requirements.txt` y se ejecuta `python miniproyecto.py`. El programa utiliza el CSV mensual agregado y genera las figuras y tablas de resultados, sin requerir el archivo empresarial original.
+
 ## 1. La serie
 
 La serie corresponde a la **cantidad de pares netos vendidos mensualmente** por una empresa del sector calzado. Fue consolidada a partir de la columna `Pares` de la hoja `Detalle` del archivo empresarial anonimizado V2, conservando las devoluciones negativas. Abarca **enero de 2022 a diciembre de 2025**, con **48 observaciones mensuales consecutivas** y **93.411 pares netos** acumulados. Se eligió por su relación directa con la planificación comercial y de inventarios.
