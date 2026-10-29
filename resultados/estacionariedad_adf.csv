@@ -1,0 +1,6 @@
+transformacion,observaciones,regresion,estadistico_adf,valor_p,rezagos_adf,observaciones_efectivas,rechaza_raiz_unitaria_5pct
+Original,48,c,-4.72542247078538,7.537013282894296e-05,0,47,True
+Original con tendencia,48,ct,-6.865656061255484,2.838663596137096e-08,0,47,True
+Diferencia regular,47,c,-5.544990834977234,1.6686566426217364e-06,10,36,True
+Diferencia estacional (12),36,c,-1.3639714872117217,0.599421645765445,9,26,False
+Diferencia regular y estacional,35,c,-2.846111241314013,0.05198299092055786,10,24,False
