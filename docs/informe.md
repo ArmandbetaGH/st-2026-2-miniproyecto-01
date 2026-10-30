@@ -32,6 +32,34 @@ El residuo de mayor magnitud absoluta aparece en **2024-05 (+1,502.06 pares)**: 
 
 Los valores anteriores se imprimen directamente mediante `descomponer()` y su representación está en `figuras/stl.png`.
 
+Fortaleza de los componentes STL
+
+Para cuantificar la importancia de la tendencia y la estacionalidad se calcularon las medidas de fortaleza de los componentes propuestas para la descomposición STL. Estas métricas toman valores entre 0 y 1, donde los valores más cercanos a 1 indican que el componente explica una mayor proporción de la variabilidad respecto al residuo.
+
+Se utilizaron las siguientes expresiones:
+
+$$F_T = \max\left(0, 1 - \frac{\operatorname{Var}(R_t)}{\operatorname{Var}(T_t + R_t)}\right)$$
+
+$$F_S = \max\left(0, 1 - \frac{\operatorname{Var}(R_t)}{\operatorname{Var}(S_t + R_t)}\right)$$
+
+Los resultados obtenidos fueron:
+
+Componente	Fortaleza STL	Interpretación
+Tendencia	0.6028	Presencia moderada de una tendencia en la serie.
+Estacionalidad	0.6939	Patrón estacional relativamente marcado.
+
+La fortaleza estacional (0.6939) es superior a la fortaleza de tendencia (0.6028), lo que indica que el patrón estacional presenta una señal ligeramente más fuerte que la tendencia según estas métricas. Sin embargo, ambos componentes son relevantes para describir el comportamiento de las ventas.
+
+Los valores calculados se almacenan en resultados/fuerza_componentes.csv, permitiendo su consulta y reproducción.
+
+Comparación del componente estacional por año
+
+Se construyó una gráfica comparativa del componente estacional obtenido mediante STL para los años 2022, 2023, 2024 y 2025. En ella se representan los doce meses de cada año, lo que permite examinar visualmente las similitudes y diferencias del comportamiento estacional a lo largo del periodo estudiado.
+
+Esta representación complementa el promedio mensual de estacionalidad presentado anteriormente, ya que permite observar la variabilidad del componente entre años y evaluar visualmente la estabilidad del patrón anual.
+
+Dado que se dispone únicamente de cuatro ciclos anuales, las diferencias observadas deben interpretarse de manera exploratoria y no permiten afirmar que el patrón estacional permanecerá constante en periodos futuros.
+
 ## 3. Líneas base y backtest
 
 Se utilizó el **backtest de `comun.py` sin modificaciones**, con 24 meses finales destinados al esquema de evaluación por orígenes móviles y un horizonte de **12 meses** en cada origen. Con 48 observaciones, se evalúan **13 orígenes** entre **diciembre de 2023 y diciembre de 2024**. Para cada origen, las funciones de pronóstico reciben únicamente la serie de entrenamiento disponible hasta ese momento; el pronóstico se contrasta con los 12 meses siguientes. El promedio de métricas corresponde a la **media de las 13 métricas por origen**, no a una RMSE agrupada por todos los errores.
@@ -58,6 +86,28 @@ Se aplicó la **prueba Dickey-Fuller aumentada (ADF)** bajo la hipótesis nula *
 | Diferencia regular y estacional | -2.846 | 0.051982991 | 10 |
 
 La serie original **rechaza H₀** tanto con constante (p = **7.5370133e-05**) como con constante y tendencia (p = **2.8386636e-08**). Como decisión inicial se adopta **`d = 0`**: diferenciar regularmente no parece indispensable para eliminar una raíz unitaria. La diferencia estacional no rechaza H₀ (p = **0.599422**), resultado que **no debe interpretarse como prueba de que `D = 1` es obligatorio**. ADF no es una prueba específica de raíces unitarias estacionales; se adopta provisionalmente **`D = 0`** por parsimonia y se representa el patrón anual mediante términos SARIMA estacionales (`P`, `Q`).
+
+Pruebas KPSS de nivel y tendencia
+
+Como complemento a la prueba ADF, se aplicó la prueba de Kwiatkowski-Phillips-Schmidt-Shin (KPSS) sobre la serie original. A diferencia de ADF, cuya hipótesis nula establece la presencia de una raíz unitaria, KPSS plantea como hipótesis nula la estacionariedad de la serie.
+
+Se evaluaron dos especificaciones: estacionariedad alrededor de un nivel constante (regression="c") y estacionariedad alrededor de una tendencia determinística (regression="ct"). En ambos casos se utilizó la selección automática de rezagos (nlags="auto") y un nivel de significancia del 5 %.
+
+Los resultados fueron:
+
+Prueba	Estadístico KPSS	Valor p	Rezagos	Decisión (α = 0.05)
+KPSS de nivel (c)	0.7134	0.01233	3	Se rechaza H₀
+KPSS de tendencia (ct)	0.1209	0.09643	0	No se rechaza H₀
+
+En la prueba KPSS de nivel, el valor p de 0.01233 es inferior a 0.05, por lo que se rechaza la hipótesis nula de estacionariedad alrededor de un nivel constante.
+
+Por el contrario, en la prueba KPSS de tendencia, el valor p de 0.09643 es superior a 0.05, por lo que no existe evidencia estadística suficiente para rechazar la hipótesis nula de estacionariedad alrededor de una tendencia determinística.
+
+Al considerar conjuntamente los resultados de ADF y KPSS, se encuentra evidencia compatible con una serie estacionaria alrededor de una tendencia determinística. En particular, ADF rechaza la presencia de una raíz unitaria en la serie original, mientras que KPSS de tendencia no rechaza la estacionariedad alrededor de una tendencia.
+
+Estos resultados respaldan la decisión inicial de utilizar d = 0, aunque no garantizan que la serie sea estacionaria en sentido estricto. La selección definitiva de los modelos debe considerar también su desempeño predictivo y el diagnóstico de residuos.
+
+Los resultados de ambas pruebas KPSS se almacenan en resultados/kpss.csv para facilitar su consulta y reproducción.
 
 ![ACF y PACF](../figuras/acf_pacf.png)
 
