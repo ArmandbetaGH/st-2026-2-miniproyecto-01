@@ -437,9 +437,11 @@ def _ajustar_arima(entrenamiento, orden, orden_estacional, exog=None):
 def elegir_sarima(serie, d, D):
     """Rejilla (p,q,P,Q) en {0,1}, AIC y Ljung-Box del mejor convergido.
 
-    Se seleccionan órdenes con TODA la serie a título exploratorio. El
-    backtest reestima parámetros en cada origen, pero mantiene estos órdenes:
-    esta elección previa sí ve fechas posteriores y se advierte en el informe.
+    Selección de órdenes usando los 24 primeros meses, disponibles en el
+    primer origen de backtesting. El mismo orden se mantiene en todos los
+    orígenes; los parámetros se reestiman solo con cada entrenamiento.
+    Advertencia: la selección con 24 meses es inestable para modelos de
+    estacionalidad anual, por lo que se interpreta como exploratoria.
     """
     from itertools import product
     from statsmodels.graphics.tsaplots import plot_acf
@@ -468,7 +470,7 @@ def elegir_sarima(serie, d, D):
         orden = (p, d, q)
         estacional = (P, D, Q, PERIODO)
         try:
-            ajuste = _ajustar_arima(serie, orden, estacional)
+            ajuste = _ajustar_arima(serie_seleccion, orden, estacional)
             convergio = bool(ajuste.mle_retvals.get("converged", False))
             aic = float(ajuste.aic)
             filas.append({
@@ -502,9 +504,15 @@ def elegir_sarima(serie, d, D):
     # Ajustamos grados de libertad por términos AR/MA estimados.
     # No descontamos la constante del modelo.
     grados = orden[0] + orden[2] + estacional[0] + estacional[2]
-    residuos = pd.Series(ajuste.resid * ESCALA, index=serie.index, name="residuo_pares")
+    # Conservar el índice temporal del mismo ajuste (24 meses); reindexar
+    # a los 48 meses crea NaN y anula las pruebas de Ljung-Box y ACF.
+    residuos = pd.Series(ajuste.resid * ESCALA, name="residuo_pares")
+    if len(residuos) < PERIODO + 1 or not np.isfinite(residuos).all():
+        raise ValueError("Residuos SARIMA insuficientes o no finitos.")
+    # En 24 observaciones no se puede usar lag 24. Diagnóstico indicativo.
+    lags_lb = [PERIODO // 2, PERIODO]
     lb = acorr_ljungbox(
-        residuos, lags=[PERIODO, 2 * PERIODO],
+        residuos, lags=lags_lb,
         model_df=grados, return_df=True,
     )
     lb.index.name = "rezago"
@@ -645,9 +653,10 @@ def main():
     serie = preparar(cruda)
     graficar_serie(serie)
 
-    filas = [fila("ingenuo", serie, ingenuo),
+    detalles = []
+    filas = [fila("ingenuo", serie, ingenuo, detalles),
              fila("estacional ingenuo", serie,
-                  lambda t, h: estacional_ingenuo(t, h, PERIODO))]
+                  lambda t, h: estacional_ingenuo(t, h, PERIODO), detalles)]
 
     try:
         descomponer(serie)
@@ -685,9 +694,10 @@ def main():
         except NotImplementedError as error:
             pendiente("parte 4", error)
 
-    pd.concat(detalles, ignore_index=True).to_csv(
-        RESULTADOS / "backtest_por_origen.csv", index=False
-    )
+    if detalles:
+        pd.concat(detalles, ignore_index=True).to_csv(
+            RESULTADOS / "backtest_por_origen.csv", index=False
+        )
 
     tabla = pd.DataFrame(filas).sort_values("RMSE")
     tabla.to_csv(RESULTADOS / "metricas.csv", index=False)
