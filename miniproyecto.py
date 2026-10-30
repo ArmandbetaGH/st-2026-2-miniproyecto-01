@@ -445,6 +445,23 @@ def elegir_sarima(serie, d, D):
     from statsmodels.graphics.tsaplots import plot_acf
     from statsmodels.stats.diagnostic import acorr_ljungbox
 
+    seleccionar órdenes sin mirar meses posteriores
+    # al primer origen de backtesting (24 meses de entrenamiento).
+    
+    primeros_meses = len(serie) - 24  # comun.backtest: n_prueba=24
+    serie_seleccion = serie.iloc[:primeros_meses]
+    if len(serie_seleccion) < 2 * PERIODO:
+        raise ValueError("El primer origen no tiene dos ciclos estacionales.")
+    print(f"  Ventana AIC sin anticipación: {serie_seleccion.index[0]:%Y-%m} "
+          f"a {serie_seleccion.index[-1]:%Y-%m} ({len(serie_seleccion)} meses)")
+    # Comprobación de d=0 en el mismo periodo, no en los 48 meses.
+    # D=0 es una decisión preespecificada por parsimonia; no pretende
+    # descartar formalmente una raíz unitaria estacional.
+    from statsmodels.tsa.stattools import adfuller
+    p_adf_inicial = adfuller(serie_seleccion, regression="c", autolag="AIC")[1]
+    print(f"  ADF solo ventana inicial: p={p_adf_inicial:.6g}; "
+          f"d={d}, D={D} predefinidos y documentados")
+
     filas = []
     print("\nMODELOS — rejilla SARIMA pequeña (16 especificaciones)")
     for p, q, P, Q in product((0, 1), repeat=4):
@@ -477,7 +494,7 @@ def elegir_sarima(serie, d, D):
     ganador = candidatos.iloc[0]
     orden = (int(ganador.p), int(d), int(ganador.q))
     estacional = (int(ganador.P), int(D), int(ganador.Q), PERIODO)
-    ajuste = _ajustar_arima(serie, orden, estacional)
+    ajuste = _ajustar_arima(serie_seleccion, orden, estacional)
     print(f"  Ganador por AIC convergido: SARIMA{orden}{estacional}; "
           f"AIC={ajuste.aic:.4f}")
 
@@ -605,8 +622,13 @@ def modelo_sarimax(orden, orden_estacional, x):
 # 5. La tabla de métricas
 # ============================================================
 
-def fila(nombre, serie, modelo):
-    _, promedio = backtest(serie, modelo)
+def fila(nombre, serie, modelo, detalles=None):
+    por_origen, promedio = backtest(serie, modelo)
+    # Aporte de Edison: guardar también el detalle por origen para auditoría.
+    if detalles is not None:
+        detalle = por_origen.copy()
+        detalle.insert(0, "modelo", nombre)
+        detalles.append(detalle)
     return {"modelo": nombre, "decision": DECISION,
             "RMSE": round(promedio["RMSE"], 2), "MAE": round(promedio["MAE"], 2),
             "MAPE": round(promedio["MAPE"], 2)}
@@ -642,7 +664,7 @@ def main():
         try:
             orden, estacional = elegir_sarima(serie, d, D)
             filas.append(fila(f"SARIMA{orden}{estacional}", serie,
-                              modelo_sarima(orden, estacional)))
+                              modelo_sarima(orden, estacional), detalles))
             x = exogenas(serie)
             ajuste_exog = _ajustar_arima(
                 serie, orden, estacional, exog=x.loc[serie.index]
@@ -658,9 +680,14 @@ def main():
             print(f"  Efecto estimado festivos: {beta:+.2f} pares por festivo; "
                   f"p={p_festivos:.6f}")
             filas.append(fila(f"SARIMAX{orden}{estacional} + exógenas", serie,
-                              modelo_sarimax(orden, estacional, x)))
+                              modelo_sarimax(orden, estacional, x), detalles))
+
         except NotImplementedError as error:
             pendiente("parte 4", error)
+
+    pd.concat(detalles, ignore_index=True).to_csv(
+        RESULTADOS / "backtest_por_origen.csv", index=False
+    )
 
     tabla = pd.DataFrame(filas).sort_values("RMSE")
     tabla.to_csv(RESULTADOS / "metricas.csv", index=False)
