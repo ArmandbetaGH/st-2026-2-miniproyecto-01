@@ -445,7 +445,7 @@ def elegir_sarima(serie, d, D):
     from statsmodels.graphics.tsaplots import plot_acf
     from statsmodels.stats.diagnostic import acorr_ljungbox
 
-    seleccionar órdenes sin mirar meses posteriores
+    # seleccionar órdenes sin mirar meses posteriores
     # al primer origen de backtesting (24 meses de entrenamiento).
     
     primeros_meses = len(serie) - 24  # comun.backtest: n_prueba=24
