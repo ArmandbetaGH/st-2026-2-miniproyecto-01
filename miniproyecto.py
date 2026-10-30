@@ -111,6 +111,42 @@ def descomponer(serie):
     estacional = resultado.seasonal
     residuos = resultado.resid
 
+    # ============================================================
+    # CONTRIBUCIÓN MÓNICA — Fortaleza de componentes STL
+    # ============================================================
+
+    # Varianza del componente residual
+    var_residuos = residuos.var()
+
+    # Varianza de tendencia + residuos
+    var_tendencia = (tendencia + residuos).var()
+
+    # Varianza de estacionalidad + residuos
+    var_estacional = (estacional + residuos).var()
+
+    # Fortaleza de tendencia y estacionalidad
+    fuerza_tendencia = max(
+        0.0, 1 - var_residuos / var_tendencia
+    ) if var_tendencia > 0 else 0.0
+
+    fuerza_estacional = max(
+        0.0, 1 - var_residuos / var_estacional
+    ) if var_estacional > 0 else 0.0
+
+    # Mostrar resultados en consola
+    print("\nFORTALEZA DE COMPONENTES STL")
+    print(f"  Fortaleza de tendencia: {fuerza_tendencia:.4f}")
+    print(f"  Fortaleza estacional: {fuerza_estacional:.4f}")
+
+    # Guardar resultados en archivo CSV
+    pd.DataFrame([{
+        "fuerza_tendencia": fuerza_tendencia,
+        "fuerza_estacional": fuerza_estacional
+    }]).to_csv(
+        RESULTADOS / "fuerza_componentes.csv",
+        index=False
+    )
+
     # La estacionalidad STL puede variar por año: resumimos su promedio
     # por mes calendario, sin confundirlo con ventas reales del mes.
     promedio_mensual = (
@@ -161,6 +197,56 @@ def descomponer(serie):
     fig.tight_layout(rect=(0, 0, 1, 0.965))
     fig.savefig(FIGURAS / "stl.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
+    # ============================================================
+    # CONTRIBUCIÓN MÓNICA — Comparación estacional por año
+    # ============================================================
+
+    fig, ax = plt.subplots(figsize=(11, 6))
+
+    nombres_meses_cortos = [
+        "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+        "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+    ]
+
+    # Comparar el componente estacional STL de cada año
+    for anio in sorted(estacional.index.year.unique()):
+
+        datos_anio = estacional[estacional.index.year == anio]
+
+        ax.plot(
+            datos_anio.index.month,
+            datos_anio.values,
+            marker="o",
+            linewidth=2,
+            label=str(anio)
+        )
+
+    ax.set_title(
+        "Comparación de estacionalidad STL por año (2022–2025)",
+        fontsize=14,
+        fontweight="bold"
+    )
+
+    ax.set_xlabel("Mes")
+    ax.set_ylabel("Componente estacional (pares netos)")
+
+    ax.set_xticks(range(1, 13))
+    ax.set_xticklabels(nombres_meses_cortos)
+
+    ax.axhline(0, color="gray", linestyle="--", linewidth=0.8)
+
+    ax.grid(alpha=0.3)
+    ax.legend(title="Año")
+
+    fig.tight_layout()
+
+    fig.savefig(
+        FIGURAS / "estacionalidad_por_anio.png",
+        dpi=150,
+        bbox_inches="tight"
+    )
+
+    plt.close(fig)
     return resultado
 
 
@@ -176,7 +262,7 @@ def estacionariedad(serie):
     *estacionales*; D se decide con evidencia estacional y parsimonia.
     """
     from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-    from statsmodels.tsa.stattools import acf, adfuller, pacf
+    from statsmodels.tsa.stattools import acf, adfuller, kpss, pacf
 
     casos = [
         ("Original", serie, "c"),
@@ -206,6 +292,60 @@ def estacionariedad(serie):
 
     pd.DataFrame(filas_adf).to_csv(
         RESULTADOS / "estacionariedad_adf.csv", index=False
+    )
+        # ============================================================
+    # CONTRIBUCIÓN MÓNICA — Pruebas KPSS de nivel y tendencia
+    # ============================================================
+
+    import warnings
+    from statsmodels.tools.sm_exceptions import InterpolationWarning
+
+    casos_kpss = [
+        ("Nivel", "c"),
+        ("Tendencia", "ct"),
+    ]
+
+    filas_kpss = []
+
+    print("\nESTACIONARIEDAD — prueba KPSS")
+    print("  H0: la serie es estacionaria alrededor de un nivel o tendencia.")
+    print("  Nivel de significancia: 0.05")
+
+    for nombre, regresion in casos_kpss:
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", InterpolationWarning)
+
+            estadistico, p, rezagos, valores_criticos = kpss(
+                serie,
+                regression=regresion,
+                nlags="auto"
+            )
+
+        rechaza_h0 = p < 0.05
+
+        filas_kpss.append({
+            "prueba": nombre,
+            "regresion": regresion,
+            "estadistico_kpss": estadistico,
+            "valor_p": p,
+            "rezagos": rezagos,
+            "rechaza_h0_5pct": rechaza_h0
+        })
+
+        veredicto = "rechaza H0" if rechaza_h0 else "no rechaza H0"
+
+        print(
+            f"  KPSS {nombre:<10} "
+            f"estadístico={estadistico:.4f}  "
+            f"p={p:.5f}  "
+            f"rezagos={rezagos}  "
+            f"{veredicto}"
+        )
+
+    pd.DataFrame(filas_kpss).to_csv(
+        RESULTADOS / "kpss.csv",
+        index=False
     )
 
     # Selección documentada de la serie del grupo, no regla automática universal:
