@@ -124,157 +124,168 @@ Para la **serie sin diferencias (`d = 0`, `D = 0`)**, la banda exploratoria apro
 
 ## 5. Modelos clásicos
 
-Se evaluó una rejilla pequeña de **16 SARIMA**, con $p,q,P,Q\in\{0,1\}$,
-$d=0$, $D=0$ y periodo estacional $m=12$ fijados con el análisis de la
-sección anterior. Se ajustó sobre las ventas divididas por una **escala de 10**
-para mejorar la estabilidad numérica; los pronósticos se regresan a **pares
-netos originales** antes de calcular las métricas. Se utilizó constante
-porque la serie no se diferenció. Se descartaría cualquier ajuste que no
-convergiera; los 16 ajustes de esta ejecución convergieron.
+### Selección de órdenes sin anticipar meses del backtest
 
-El criterio AIC penaliza la complejidad del modelo, pero **no mide por sí mismo
-el desempeño predictivo fuera de muestra**. La rejilla y sus valores numéricos,
-generados por código, están disponibles en `resultados/rejilla_aic.csv`.
+Para evaluar los candidatos SARIMA, se utilizó exclusivamente la **ventana de
+24 meses entre enero de 2022 y diciembre de 2023**, que es el entrenamiento
+disponible en el primer origen del `backtest` de `comun.py`. La selección se
+realizó **una sola vez** con una rejilla de 16 especificaciones:
+$p,q,P,Q\in\{0,1\}$, $d=0$, $D=0$ y periodo estacional 12. Se utilizó
+una constante al no diferenciar la serie, con escalado numérico de 10; el
+error se calcula siempre en **pares originales**.
 
-| Orden regular | Orden estacional | AIC | Convergió |
+Se preespecificó $d=D=0$ mediante la exploración inicial de la serie completa,
+y se comprobó que la prueba ADF con constante en la ventana de 24 meses
+rechazaba raíz unitaria ($p\approx 1.51\times 10^{-5}$). Esta decisión es
+exploratoria y **no constituye una validación anidada completamente libre de
+selección retrospectiva**. Una selección estrictamente anidada requeriría
+determinar órdenes y diferencias de nuevo en cada origen usando solo los datos
+históricos respectivos. Con apenas dos ciclos en el primer entrenamiento,
+la identificación de estacionalidad anual es especialmente incierta.
+
+El criterio de selección fue el **AIC mínimo entre ajustes convergidos**, sin
+utilizar las ventas de 2024 ni 2025 para elegir órdenes. El AIC refleja ajuste
+penalizado por complejidad; no garantiza menor error de pronóstico. Los
+resultados calculados por la versión corregida del programa fueron:
+
+| Orden regular | Orden estacional | AIC (24 meses) | Convergió |
 |---|---|---:|---|
-| `(1, 0, 1)` | `(1, 0, 0, 12)` | 552.77 | Sí |
-| `(1, 0, 1)` | `(1, 0, 1, 12)` | 554.76 | Sí |
-| `(1, 0, 1)` | `(0, 0, 1, 12)` | 554.93 | Sí |
-| `(1, 0, 0)` | `(0, 0, 1, 12)` | 558.46 | Sí |
-| `(1, 0, 0)` | `(1, 0, 0, 12)` | 558.83 | Sí |
-| `(0, 0, 0)` | `(0, 0, 1, 12)` | 559.33 | Sí |
-| `(0, 0, 1)` | `(0, 0, 1, 12)` | 559.67 | Sí |
-| `(1, 0, 0)` | `(1, 0, 1, 12)` | 559.96 | Sí |
-| `(0, 0, 0)` | `(1, 0, 1, 12)` | 560.32 | Sí |
-| `(0, 0, 1)` | `(1, 0, 0, 12)` | 560.91 | Sí |
-| `(0, 0, 1)` | `(1, 0, 1, 12)` | 561.09 | Sí |
-| `(0, 0, 0)` | `(1, 0, 0, 12)` | 561.45 | Sí |
-| `(1, 0, 1)` | `(0, 0, 0, 12)` | 567.06 | Sí |
-| `(1, 0, 0)` | `(0, 0, 0, 12)` | 567.57 | Sí |
-| `(0, 0, 1)` | `(0, 0, 0, 12)` | 568.87 | Sí |
-| `(0, 0, 0)` | `(0, 0, 0, 12)` | 571.01 | Sí |
+| `(0, 0, 0)` | `(1, 0, 0, 12)` | 278.20 | Sí |
+| `(0, 0, 0)` | `(0, 0, 1, 12)` | 278.20 | Sí |
+| `(1, 0, 1)` | `(1, 0, 0, 12)` | 279.57 | Sí |
+| `(1, 0, 0)` | `(1, 0, 0, 12)` | 279.57 | Sí |
+| `(0, 0, 0)` | `(0, 0, 0, 12)` | 279.73 | Sí |
+| `(0, 0, 1)` | `(1, 0, 0, 12)` | 279.82 | Sí |
+| `(1, 0, 0)` | `(0, 0, 1, 12)` | 279.86 | Sí |
+| `(0, 0, 1)` | `(0, 0, 1, 12)` | 279.96 | Sí |
+| `(1, 0, 1)` | `(0, 0, 1, 12)` | 280.13 | Sí |
+| `(0, 0, 0)` | `(1, 0, 1, 12)` | 280.20 | Sí |
+| `(1, 0, 0)` | `(1, 0, 1, 12)` | 281.37 | Sí |
+| `(1, 0, 1)` | `(1, 0, 1, 12)` | 281.41 | Sí |
+| `(0, 0, 1)` | `(1, 0, 1, 12)` | 281.71 | Sí |
+| `(1, 0, 0)` | `(0, 0, 0, 12)` | 281.73 | Sí |
+| `(0, 0, 1)` | `(0, 0, 0, 12)` | 281.73 | Sí |
+| `(1, 0, 1)` | `(0, 0, 0, 12)` | 281.86 | Sí |
 
-El mínimo entre modelos convergidos corresponde a **SARIMA(1,0,1)(1,0,0,12)**,
-con **AIC = 552.7675**. En el componente regular, $p=1$ utiliza dependencia
-a un mes, $d=0$ no aplica diferencias y $q=1$ incorpora un choque pasado.
-En el estacional, $P=1$ introduce relación a 12 meses, $D=0$ evita diferenciar
-por año y $Q=0$ no incorpora término MA estacional. Una forma de representar
-su estructura es:
+El mínimo corresponde a **SARIMA(0,0,0)(1,0,0,12)**, con **AIC = 278.2031**.
+La alternativa SARIMA(0,0,0)(0,0,1,12) arroja **AIC = 278.2039**, una
+**diferencia prácticamente nula**. Por tanto, la elección no debe
+interpretarse como evidencia contundente de superioridad estructural.
 
-$$
-(1-\phi_1 B)(1-\Phi_1 B^{12})(y_t-\mu)
-= (1+\theta_1 B)\varepsilon_t,
-$$
+El modelo seleccionado tiene una componente autorregresiva estacional de
+periodo 12, sin términos AR o MA regulares. Su forma conceptual es:
 
-con $B$ como operador de rezago mensual y $\varepsilon_t$ como innovación.
-La ecuación resume la estructura SARIMA; los coeficientes se estiman en el
-ajuste y se vuelven a estimar por origen durante el backtest.
+```math
+(1-\Phi_1 B^{12})(y_t-\mu)=\varepsilon_t
+```
+
+La rejilla íntegra se encuentra en `resultados/rejilla_aic.csv`. Los órdenes
+seleccionados se mantienen durante el backtesting, pero **los parámetros se
+reestiman en cada origen** exclusivamente con su entrenamiento.
 
 ### Diagnóstico de residuos
 
-![Diagnóstico de residuos SARIMA](../figuras/residuos.png)
+![Residuos del SARIMA elegido con ventana inicial de 24 meses](../figuras/residuos.png)
 
-La **prueba Ljung-Box** contrasta $H_0$: ausencia de autocorrelación conjunta
-hasta el rezago evaluado. Se descontaron **3 grados de libertad AR/MA**
-($p+q+P+Q=3$). Se obtuvo:
+La prueba Ljung-Box contrasta la hipótesis nula de **ausencia de autocorrelación
+hasta el rezago evaluado**. El diagnóstico se calculó con los residuos del
+**mismo ajuste inicial de 24 meses** y su índice temporal correcto, descontando
+1 grado de libertad por el coeficiente estacional AR. En vez de probar el
+rezago 24 con apenas 24 observaciones, se utilizaron los rezagos **6 y 12**:
 
-| Rezago | Estadístico Ljung-Box | Valor p | Interpretación al 5 % |
-|---|---:|---:|---|
-| 12 | 9.5288 | 0.389955 | No se rechaza $H_0$ |
-| 24 | 21.2600 | 0.443168 | No se rechaza $H_0$ |
+| Rezago | Estadístico Q | Valor p | Interpretación (5 %) |
+|---:|---:|---:|---|
+| 6 | 5.2027 | 0.391651 | No se rechaza H₀ |
+| 12 | 13.6058 | 0.255576 | No se rechaza H₀ |
 
-La ACF de residuos no presenta señales suficientes para rechazar la ausencia
-de autocorrelación global mediante esas pruebas. Esto **no demuestra** que
-los errores sean independientes, normales ni que el modelo sea el mejor
-pronosticando. Con 48 observaciones, la potencia de diagnóstico es limitada.
+Estos resultados no aportan evidencia suficiente para rechazar ausencia de
+autocorrelación bajo dichas pruebas, pero **no demuestran independencia de
+los residuos**. La muestra de 24 meses y el número de parámetros limitan
+la potencia estadística. El archivo `resultados/ljung_box.csv` conserva los
+valores generados.
 
-### SARIMAX: festivos como variable exógena
+### SARIMAX con festivos de Colombia
 
-Se agregó el **número de festivos legales de Colombia por mes**. El calendario
-se calcula mediante las reglas de la Ley 51 de 1983: fechas fijas,
-festividades trasladadas al lunes y fechas móviles asociadas a Pascua
-([texto legal — Función Pública](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php/norma.php?i=4954)).
-El índice incluye **2022-01 a 2026-12**, incorporando 12 meses futuros
-para poder emitir pronósticos. En **2025 aparecen 17 fechas distintas**,
-pues pueden coincidir dos festividades en una sola fecha de descanso.
+Como exógena se utilizó el **número mensual de festivos de Colombia**, calculado
+según las reglas de la Ley 51 de 1983 y el calendario de Pascua. El calendario
+se conoce antes de cada pronóstico, sin incorporar ventas futuras. Se incluyeron
+fechas de enero de 2022 a diciembre de 2026 para garantizar la cobertura de
+los 12 meses posteriores a la serie.
 
-La estructura del modelo SARIMAX es:
+La representación del modelo es:
 
-$$
-y_t = \beta_0 + \beta_1 x_t + u_t,
-\qquad u_t \sim SARIMA(1,0,1)(1,0,0)_{12},
-$$
+```math
+y_t = \beta_0 + \beta_1 x_t + u_t, \qquad
+u_t \sim SARIMA(0,0,0)(1,0,0)_{12}
+```
 
-donde $x_t$ es el número de fechas festivas en el mes. El ajuste completo
-produjo un efecto estimado de **-22.41 pares por festivo** y
-**p = 0.868564**. Al superar 0,05, no se obtuvo evidencia
-estadística suficiente de un efecto distinto de cero, manteniendo las demás
-condiciones del modelo. Su coeficiente no implica causalidad. Los valores
-quedaron registrados en `resultados/efecto_festivos.csv`.
+El ajuste descriptivo sobre los 48 meses estimó
+**-14.57 pares por festivo**
+($p=0.931424$). Con un valor $p$ mayor que 0,05 no se
+encontró evidencia suficiente de asociación estadísticamente significativa;
+este coeficiente **no demuestra causalidad**. Se registra en
+`resultados/efecto_festivos.csv`.
 
-En el **backtest** se utilizan para ajustar solamente los festivos de los
-meses observados y, para pronosticar, los festivos conocidos de cada mes
-futuro. No se utilizan ventas posteriores al origen en los ajustes.
+### Comparación mediante backtesting
 
-**Limitación de selección:** el modelo y los órdenes SARIMA fueron escogidos
-por AIC sobre los 48 meses **antes** del backtest. Por ello, aunque cada
-ajuste de parámetros se hace solo con datos de entrenamiento, la elección
-global de órdenes sí utiliza información de fechas posteriores a algunos
-orígenes. Los resultados no deben presentarse como una selección anidada
-completamente libre de fuga de información. Un backtest anidado exigiría
-repetir la selección de órdenes dentro de cada entrenamiento, opción que no
-se implementa en esta versión.
+Se conserva **sin modificaciones `comun.py`**. Se evaluaron **13 orígenes
+móviles**, cada uno con pronósticos de **12 meses**. En cada origen los
+parámetros SARIMA/SARIMAX se ajustan con las ventas disponibles hasta ese
+punto; el calendario futuro se utiliza solo como exógena conocida. Edison
+incorporó el registro detallado de las métricas por origen en
+`resultados/backtest_por_origen.csv`, incluyendo ambos métodos ingenuos y
+los dos modelos paramétricos.
 
 ## 6. Tabla de métricas
 
-La tabla de abajo procede de `resultados/metricas.csv`, creada con el **mismo
-`backtest` de `comun.py` sin alterar**. Compara 13 orígenes móviles, cada uno
-con pronósticos a 12 meses, y presenta el promedio de métricas por origen,
-ordenado por RMSE ascendente. No se limitaron los pronósticos a cero, pues
-se prefirió conservar la salida matemática del modelo y comparar en las
-mismas condiciones.
+Resultados de `resultados/metricas.csv`, ordenados por **RMSE promedio de los
+13 orígenes**. RMSE y MAE se expresan en pares netos; MAPE es porcentaje.
 
-| Modelo | Decisión de preparación | RMSE (pares) | MAE (pares) | MAPE (%) |
-|---|---|---:|---:|---:|
-| estacional ingenuo | 48 meses consecutivos sin faltantes; se conservan todos los valores mensuales sin imputar ni recortar; revisión comercial pendiente de meses bajos 2025 | 842.94 | 680.98 | 90.89 |
-| SARIMA(1,0,1)(1,0,0,12) | 48 meses consecutivos sin faltantes; se conservan todos los valores mensuales sin imputar ni recortar; revisión comercial pendiente de meses bajos 2025 | 857.44 | 718.55 | 109.04 |
-| SARIMAX(1,0,1)(1,0,0,12) + exógenas | 48 meses consecutivos sin faltantes; se conservan todos los valores mensuales sin imputar ni recortar; revisión comercial pendiente de meses bajos 2025 | 866.53 | 704.25 | 109.22 |
-| ingenuo | 48 meses consecutivos sin faltantes; se conservan todos los valores mensuales sin imputar ni recortar; revisión comercial pendiente de meses bajos 2025 | 1081.80 | 887.45 | 138.60 |
+| Modelo | RMSE | MAE | MAPE (%) |
+|---|---:|---:|---:|
+| estacional ingenuo | 842.94 | 680.98 | 90.89 |
+| SARIMA(0, 0, 0)(1, 0, 0, 12) | 851.25 | 704.41 | 114.01 |
+| SARIMAX(0, 0, 0)(1, 0, 0, 12) + exógenas | 885.71 | 709.88 | 114.55 |
+| ingenuo | 1081.80 | 887.45 | 138.60 |
 
-**Resultado:** la línea base **estacional ingenua** mantiene el menor RMSE,
-MAE y MAPE de esta comparación. El **SARIMA** es el mejor de los dos modelos
-clásicos parametrizados, pero su RMSE fue **1.72 % mayor**
-que el estacional ingenuo; el **SARIMAX** fue **2.80 % mayor**.
-Los MAPE elevados deben leerse con cautela debido a los meses de ventas
-muy reducidas: un error moderado en pares puede representar un porcentaje
-muy grande cuando la base mensual es pequeña.
+**Decisión de preparación (columna `decision` del CSV):** 48 meses consecutivos,
+sin faltantes; no se imputaron ni recortaron valores. Los meses de ventas
+muy bajas de 2025 requieren interpretación comercial. El MAPE es sensible
+a estas observaciones de magnitud pequeña.
 
-## 7. Conclusión
+La línea base **estacional ingenua** obtuvo el menor RMSE
+(**842.94 pares**). El SARIMA seleccionado presentó
+**851.25 pares** y el SARIMAX con festivos
+**885.71 pares**. En esta evaluación, la mayor complejidad no
+mejoró el RMSE frente a la referencia estacional.
 
-El ejercicio no justificó sustituir la **línea base estacional ingenua**
-por un modelo más complejo. El mejor SARIMA por AIC,
-**SARIMA(1,0,1)(1,0,0,12)**, logró un comportamiento residual compatible
-con ausencia de autocorrelación relevante a 12 y 24 rezagos, pero en el
-backtest presentó **RMSE de 857.44 pares**, frente a **842.94 pares**
-del estacional ingenuo. El SARIMAX con número de festivos tampoco mejoró
-el RMSE (**866.53 pares**) y su efecto exógeno no fue significativo.
+## 7. Conclusiones y limitaciones
 
-![Pronóstico ingenuo estacional frente a la realidad 2025](../figuras/validacion_2025.png)
+La selección de órdenes con los primeros 24 meses evita utilizar las ventas de
+los meses posteriores en la **rejilla AIC**. Sin embargo, la decisión preliminar
+sobre $d$ y $D$ y parte de la exploración de estacionariedad se documentaron
+con los 48 meses; no debe afirmarse que el proceso completo constituye una
+selección anidada. El desempeño se estima mediante el backtest común y la
+selección AIC tiene incertidumbre apreciable con tan pocos ciclos.
 
-La caída de ventas durante **2025** es un reto visible: la línea base
-estacional pronostica **22.902 pares** para ese año utilizando los valores
-de 2024, mientras los datos observados suman **12.998 pares**, una
-sobreestimación de **9.904 pares**. Esto ilustra que repetir el patrón del
-año anterior puede fallar cuando cambia el nivel del negocio. La gráfica
-se muestra para interpretar los errores, no para introducir un nuevo
-criterio de selección.
+El mejor modelo por RMSE es **estacional ingenuo (842.94 pares)**,
+y no el SARIMA parametrizado. La exógena de festivos tampoco mejoró el error.
+El diagnóstico Ljung-Box no halló evidencia suficiente de autocorrelación
+para el modelo elegido en la ventana inicial, con las limitaciones señaladas.
 
-**Conclusión para el Miniproyecto 2:** la referencia a superar, según el
-criterio de RMSE adoptado, es el estacional ingenuo (**842.94 pares**).
-Se sugiere investigar la caída de 2025, validar la estabilidad de la
-estacionalidad y evaluar nuevos métodos con especial cuidado al seleccionar
-hiperparámetros dentro de cada origen. Los 48 meses disponibles continúan siendo una excepción pendiente
-de respuesta académica; aunque la empresa autorizó divulgar los
-agregados mensuales, todavía no se dispone de una licencia pública
-de reutilización expresamente definida.
+![Pronóstico estacional ingenuo frente a ventas de 2025](../figuras/validacion_2025.png)
+
+Para 2025, la referencia estacional pronosticó **22.902 pares** utilizando
+los valores de 2024, mientras que se observaron **12.998 pares**. Esta
+sobreestimación muestra los límites de repetir el patrón anual cuando el
+nivel de ventas cambia.
+
+**Limitaciones académicas:** la serie privada agregada tiene **48 meses**, en
+lugar de los 60 solicitados por el enunciado. La empresa autorizó su
+publicación agregada, pero no se ha documentado una licencia abierta de
+reutilización por terceros. Se solicitó al profesor una excepción y se
+mantiene explícita esta restricción, sin inventar observaciones adicionales.
+
+**Proyección:** evaluar más historia, revisar los cambios comerciales de 2025,
+considerar validación anidada de órdenes y comparar modelos adicionales en el
+siguiente miniproyecto.

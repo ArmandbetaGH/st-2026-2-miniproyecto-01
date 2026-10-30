@@ -1,5 +1,5 @@
 modelo,decision,RMSE,MAE,MAPE
 estacional ingenuo,48 meses consecutivos sin faltantes; se conservan todos los valores mensuales sin imputar ni recortar; revisión comercial pendiente de meses bajos 2025,842.94,680.98,90.89
-"SARIMA(1, 0, 1)(1, 0, 0, 12)",48 meses consecutivos sin faltantes; se conservan todos los valores mensuales sin imputar ni recortar; revisión comercial pendiente de meses bajos 2025,857.44,718.55,109.04
-"SARIMAX(1, 0, 1)(1, 0, 0, 12) + exógenas",48 meses consecutivos sin faltantes; se conservan todos los valores mensuales sin imputar ni recortar; revisión comercial pendiente de meses bajos 2025,866.53,704.25,109.22
+"SARIMA(0, 0, 0)(1, 0, 0, 12)",48 meses consecutivos sin faltantes; se conservan todos los valores mensuales sin imputar ni recortar; revisión comercial pendiente de meses bajos 2025,851.25,704.41,114.01
+"SARIMAX(0, 0, 0)(1, 0, 0, 12) + exógenas",48 meses consecutivos sin faltantes; se conservan todos los valores mensuales sin imputar ni recortar; revisión comercial pendiente de meses bajos 2025,885.71,709.88,114.55
 ingenuo,48 meses consecutivos sin faltantes; se conservan todos los valores mensuales sin imputar ni recortar; revisión comercial pendiente de meses bajos 2025,1081.8,887.45,138.6
