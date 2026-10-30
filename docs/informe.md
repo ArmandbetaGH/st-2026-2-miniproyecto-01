@@ -38,9 +38,13 @@ Para cuantificar la importancia de la tendencia y la estacionalidad se calcularo
 
 Se utilizaron las siguientes expresiones:
 
-$$F_T = \max\left(0, 1 - \frac{\operatorname{Var}(R_t)}{\operatorname{Var}(T_t + R_t)}\right)$$
+```math
+F_T = \max\left(0, 1 - \frac{\mathrm{Var}(R_t)}{\mathrm{Var}(T_t + R_t)}\right)
+```
 
-$$F_S = \max\left(0, 1 - \frac{\operatorname{Var}(R_t)}{\operatorname{Var}(S_t + R_t)}\right)$$
+```math
+F_S = \max\left(0, 1 - \frac{\mathrm{Var}(R_t)}{\mathrm{Var}(S_t + R_t)}\right)
+```
 
 Los resultados obtenidos fueron:
 
