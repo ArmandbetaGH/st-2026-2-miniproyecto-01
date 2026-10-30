@@ -10,7 +10,9 @@ las gráficas se generan en `figuras/` y las tablas en `resultados/`.
 
 La serie corresponde a la **cantidad de pares netos vendidos mensualmente** por una empresa del sector calzado. Fue consolidada a partir de la columna `Pares` de la hoja `Detalle` del archivo empresarial anonimizado V2, conservando las devoluciones negativas. Abarca **enero de 2022 a diciembre de 2025**, con **48 observaciones mensuales consecutivas** y **93.411 pares netos** acumulados. Se eligió por su relación directa con la planificación comercial y de inventarios.
 
-**Fuente y permiso:** información empresarial suministrada al grupo y resumida en un CSV mensual agregado que se publica en `datos/ventas_calzado_mensual_V2.csv` bajo autorización empresarial de divulgación confirmada por el grupo. La fuente empresarial original no es pública y no se ha declarado una licencia abierta para que terceros reutilicen los agregados. Además, 48 meses no alcanzan el mínimo de 60 requerido por el enunciado; el grupo solicitó una excepción al docente. Se preserva esta limitación sin añadir observaciones artificiales.
+**Fuente y permiso:** información empresarial suministrada al grupo y consolidada en un CSV mensual agregado, publicado en `datos/ventas_calzado_mensual_V2.csv` con autorización de divulgación de la empresa. La fuente empresarial original no es pública y no se ha declarado una licencia abierta de reutilización por terceros.
+
+El conjunto de datos comprende **48 observaciones mensuales**, correspondientes al periodo enero de 2022 a diciembre de 2025. Aunque el enunciado establece un mínimo de 60 observaciones, el profesor **Carlos Andrés Delgado Saavedra confirmó mediante correo electrónico del 30 de octubre de 2026 que es válido utilizar esta serie para el Miniproyecto 1**. Se conserva la información original sin incorporar observaciones artificiales..
 
 ![La serie](../figuras/serie.png)
 
