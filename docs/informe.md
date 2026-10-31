@@ -282,11 +282,7 @@ los valores de 2024, mientras que se observaron **12.998 pares**. Esta
 sobreestimación muestra los límites de repetir el patrón anual cuando el
 nivel de ventas cambia.
 
-**Limitaciones académicas:** la serie privada agregada tiene **48 meses**, en
-lugar de los 60 solicitados por el enunciado. La empresa autorizó su
-publicación agregada, pero no se ha documentado una licencia abierta de
-reutilización por terceros. Se solicitó al profesor una excepción y se
-mantiene explícita esta restricción, sin inventar observaciones adicionales.
+**Alcance del análisis:** El estudio comprende cuatro ciclos anuales (2022–2025), por lo que los patrones estacionales deben interpretarse con cautela. Adicionalmente, la disminución de ventas durante 2025 representa un desafío para la precisión de los pronósticos..
 
 **Proyección:** evaluar más historia, revisar los cambios comerciales de 2025,
 considerar validación anidada de órdenes y comparar modelos adicionales en el
